@@ -1,13 +1,33 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useReducer } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
 import ErrorModal from '../UI/ErrorModal';
 import Search from './Search';
 
+const ingredientReducer = (state, action) => {
+
+  switch (action.type) {
+
+    case 'SET':
+      return action.payload.ingredients;
+
+    case 'ADD':
+      return [...state, action.payload.ingredient];
+
+    case 'DELETE':
+      return state.filter(value => value.id !== action.payload.id);
+
+    default:
+      throw new Error('Should not be here.');
+
+  }
+
+};
+
 const Ingredients = () => {
 
-  const [ingredients, setIngredients] = useState([]);
+  const [ingredients, dispatch] = useReducer(ingredientReducer, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -27,10 +47,15 @@ const Ingredients = () => {
   
       const json = await data.json();
   
-      setIngredients((prevIngredients) => [...prevIngredients, {
-        id: json.name,
-        ...ingredient
-      }]);
+      dispatch({
+        type: 'ADD',
+        payload: {
+          ingredient: {
+            id: json.name,
+            ...ingredient
+          }
+        }
+      });
   
       setLoading(false);
 
@@ -51,7 +76,12 @@ const Ingredients = () => {
         method: 'DELETE'
       });
 
-      setIngredients((prevIngredients) => prevIngredients.filter(ingredient => ingredient.id !== id));
+      dispatch({
+        type: 'DELETE',
+        payload: {
+          id
+        }
+      });
   
       setLoading(false);
 
@@ -63,7 +93,12 @@ const Ingredients = () => {
     
   };
 
-  const filterIngredientsHandler = useCallback(ingredients => setIngredients(ingredients), []);
+  const filterIngredientsHandler = useCallback(ingredients => dispatch({
+    type: 'SET',
+    payload: {
+      ingredients
+    }
+  }), []);
 
   const clearError = () => setError('');
 
