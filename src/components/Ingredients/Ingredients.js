@@ -44,12 +44,14 @@ const Ingredients = () => {
 
   };
 
+  const filterIngredientsHandler = ingredients => setIngredients(ingredients);
+
   return (
     <div className="App">
       <IngredientForm onAddIngredient={ addIngredientHandler } />
 
       <section>
-        <Search />
+        <Search onLoadIngredients={ filterIngredientsHandler } />
         <IngredientList ingredients={ ingredients } onRemoveItem={ () => {} } />
       </section>
     </div>
