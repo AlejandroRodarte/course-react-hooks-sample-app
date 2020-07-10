@@ -27,6 +27,16 @@ const Ingredients = () => {
 
   };
 
+  const removeIngredientHandler = async id => {
+
+    await fetch(`https://react-ingredients-app.firebaseio.com/ingredients/${id}.json`, {
+      method: 'DELETE'
+    });
+
+    setIngredients((prevIngredients) => prevIngredients.filter(ingredient => ingredient.id !== id));
+
+  };
+
   const filterIngredientsHandler = useCallback(ingredients => setIngredients(ingredients), []);
 
   return (
@@ -35,7 +45,7 @@ const Ingredients = () => {
 
       <section>
         <Search onLoadIngredients={ filterIngredientsHandler } />
-        <IngredientList ingredients={ ingredients } onRemoveItem={ () => {} } />
+        <IngredientList ingredients={ ingredients } onRemoveItem={ removeIngredientHandler } />
       </section>
     </div>
   );
