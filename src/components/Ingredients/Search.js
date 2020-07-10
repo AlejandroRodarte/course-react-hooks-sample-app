@@ -11,7 +11,7 @@ const Search = React.memo(({ onLoadIngredients }) => {
 
   useEffect(() => {
 
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
 
       if (filter === inputRef.current.value) {
 
@@ -31,6 +31,8 @@ const Search = React.memo(({ onLoadIngredients }) => {
           });
 
       }
+
+      return () => clearTimeout(timeout);
   
     }, 500);
 
