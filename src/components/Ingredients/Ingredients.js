@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useReducer } from 'react';
+import React, { useCallback, useReducer } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -25,15 +25,52 @@ const ingredientReducer = (state, action) => {
 
 };
 
+const httpReducer = (state, action) => {
+
+  switch (action.type) {
+
+    case 'START':
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+
+    case 'SUCCESS':
+      return {
+        ...state,
+        loading: false,
+        error: null
+      };
+
+    case 'FAIL':
+      return {
+        ...state,
+        loading: false,
+        error: action.payload.error
+      };
+
+    case 'CLEAR':
+      return {
+        ...state,
+        error: null
+      };
+
+    default:
+      throw new Error('Should not be here.');
+
+  }
+
+};
+
 const Ingredients = () => {
 
   const [ingredients, dispatch] = useReducer(ingredientReducer, []);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [httpState, dispatchHttp] = useReducer(httpReducer, { loading: false, error: null });
 
   const addIngredientHandler = async ingredient => {
 
-    setLoading(true);
+    dispatchHttp({ type: 'START' });
 
     try {
 
@@ -57,18 +94,17 @@ const Ingredients = () => {
         }
       });
   
-      setLoading(false);
+      dispatchHttp({ type: 'SUCCESS' });
 
     } catch (e) {
-      setError('Something went wrong!');
-      setLoading(false);
+      dispatchHttp({ type: 'FAIL', payload: { error: 'Something went wrong!' } });
     }
 
   };
 
   const removeIngredientHandler = async id => {
 
-    setLoading(true);
+    dispatchHttp({ type: 'START' });
 
     try {
 
@@ -83,11 +119,10 @@ const Ingredients = () => {
         }
       });
   
-      setLoading(false);
+      dispatchHttp({ type: 'SUCCESS' });
 
     } catch (e) {
-      setError('Something went wrong!');
-      setLoading(false);
+      dispatchHttp({ type: 'FAIL', payload: { error: 'Something went wrong!' } });
     }
 
     
@@ -100,15 +135,15 @@ const Ingredients = () => {
     }
   }), []);
 
-  const clearError = () => setError('');
+  const clearError = () => dispatchHttp({ type: 'CLEAR' });
 
   return (
 
     <div className="App">
 
-      { error && <ErrorModal onClose={ clearError }>{ error }</ErrorModal> }
+      { httpState.error && <ErrorModal onClose={ clearError }>{ httpState.error }</ErrorModal> }
 
-      <IngredientForm onAddIngredient={ addIngredientHandler } loading={ loading } />
+      <IngredientForm onAddIngredient={ addIngredientHandler } loading={ httpState.loading } />
 
       <section>
         <Search onLoadIngredients={ filterIngredientsHandler } />
