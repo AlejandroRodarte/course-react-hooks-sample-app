@@ -3,11 +3,42 @@ import React, { useState, useEffect, useRef } from 'react';
 import Card from '../UI/Card';
 import './Search.css';
 
+import useHttp from '../../hooks/http';
+
 const Search = React.memo(({ onLoadIngredients }) => {
 
   const [filter, setFilter] = useState('');
 
   const inputRef = useRef();
+
+  const [data, error, loading, task, sendRequest] = useHttp();
+
+  useEffect(() => {
+
+    if (!loading && !error) {
+
+      switch (task.type) {
+  
+        case 'SET_INGREDIENTS':
+          const ingredients = Object.keys(data).map(key => ({
+            id: key,
+            ...data[key]
+          }));
+  
+          onLoadIngredients(ingredients);
+          break;
+      
+        case 'NOOP':
+          break;
+  
+        default:
+          throw new Error('Should not be here.');
+  
+      }
+
+    }
+
+  }, [loading, error, task, data, onLoadIngredients]);
 
   useEffect(() => {
 
@@ -16,19 +47,10 @@ const Search = React.memo(({ onLoadIngredients }) => {
       if (filter === inputRef.current.value) {
 
         const query = filter.length === 0 ? '' : `?orderBy="title"&equalTo="${filter}"`;
-    
-        fetch(`https://react-ingredients-app.firebaseio.com/ingredients.json${query}`)
-          .then(res => res.json())
-          .then(res => {
-    
-            const ingredients = Object.keys(res).map(key => ({
-              id: key,
-              ...res[key]
-            }));
-    
-            onLoadIngredients(ingredients);
-    
-          });
+
+        sendRequest(`https://react-ingredients-app.firebaseio.com/ingredients.json${query}`, 'GET', null, {
+          type: 'SET_INGREDIENTS'
+        });
 
       }
 
@@ -36,7 +58,7 @@ const Search = React.memo(({ onLoadIngredients }) => {
   
     }, 500);
 
-    }, [filter, onLoadIngredients, inputRef]);
+    }, [filter, onLoadIngredients, inputRef, sendRequest]);
 
   return (
 
